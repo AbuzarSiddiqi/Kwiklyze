@@ -1,0 +1,51 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * {
+    @apply touch-manipulation;
+  }
+  
+  html {
+    @apply text-base;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  body {
+    @apply overflow-x-hidden;
+  }
+}
+
+@layer utilities {
+  .gradient-morning {
+    background: linear-gradient(135deg, #FFE4B5 0%, #FFDAB9 50%, #FFE4E1 100%);
+  }
+  
+  .gradient-noon {
+    background: linear-gradient(135deg, #E0F7FA 0%, #B2EBF2 50%, #80DEEA 100%);
+  }
+  
+  .gradient-evening {
+    background: linear-gradient(135deg, #E1BEE7 0%, #CE93D8 50%, #BA68C8 100%);
+  }
+  
+  .gradient-night {
+    background: linear-gradient(135deg, #1A237E 0%, #283593 50%, #303F9F 100%);
+  }
+  
+  /* Mobile-friendly touch targets */
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+  
+  /* Safe area for notched devices */
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
