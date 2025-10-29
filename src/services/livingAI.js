@@ -14,6 +14,12 @@ const API_KEYS = [
   import.meta.env.VITE_GROQ_API_KEY_2
 ].filter(Boolean); // Remove undefined values
 
+// Fallback to avoid errors if no keys are set
+if (API_KEYS.length === 0) {
+  console.error('⚠️ No GROQ API keys found! Please set VITE_GROQ_API_KEY_1 and VITE_GROQ_API_KEY_2 in environment variables.');
+  API_KEYS.push('dummy-key'); // Prevent crash
+}
+
 let currentKeyIndex = 0;
 
 // Initialize Groq client with first API key
