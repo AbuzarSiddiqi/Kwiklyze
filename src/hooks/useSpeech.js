@@ -5,7 +5,9 @@ import Groq from 'groq-sdk';
 const ELEVENLABS_API_KEYS = [
   import.meta.env.VITE_ELEVENLABS_API_KEY_1,
   import.meta.env.VITE_ELEVENLABS_API_KEY_2,
-  import.meta.env.VITE_ELEVENLABS_API_KEY_3
+  import.meta.env.VITE_ELEVENLABS_API_KEY_3,
+  import.meta.env.VITE_ELEVENLABS_API_KEY_4,
+  import.meta.env.VITE_ELEVENLABS_API_KEY_5
 ].filter(Boolean); // Remove undefined values
 
 let currentElevenLabsKeyIndex = 0;
@@ -28,7 +30,8 @@ const ELEVENLABS_VOICES = {
 // Multiple API keys for TTS with automatic failover from environment variables
 const TTS_API_KEYS = [
   import.meta.env.VITE_GROQ_API_KEY_1,
-  import.meta.env.VITE_GROQ_API_KEY_2
+  import.meta.env.VITE_GROQ_API_KEY_2,
+  import.meta.env.VITE_GROQ_API_KEY_3
 ].filter(Boolean); // Remove undefined values
 
 let currentTTSKeyIndex = 0;
@@ -46,7 +49,7 @@ const initializeGroq = () => {
   return groq;
 };
 
-console.log('🎤 TTS ready with ElevenLabs (3 keys) + PlayAI fallback (2 keys)');
+console.log('🎤 TTS ready with ElevenLabs (5 keys) + PlayAI fallback (3 keys)');
 
 /**
  * Hook for Speech - PlayAI TTS from Groq + Web Speech Recognition
@@ -57,11 +60,31 @@ export const useSpeech = () => {
   const [transcript, setTranscript] = useState('');
   const [error, setError] = useState(null);
   const [isSupported, setIsSupported] = useState(false);
+  const [hasPermission, setHasPermission] = useState(false);
   
   const recognitionRef = useRef(null);
   const audioRef = useRef(null);
   const isSpeakingRef = useRef(false); // Track if already speaking to prevent overlaps
   const lastTextRef = useRef(''); // Track last spoken text to prevent duplicates
+
+  // Request microphone permission on mount
+  useEffect(() => {
+    const requestMicPermission = async () => {
+      try {
+        // Request microphone access - this will persist the permission
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        // Stop the stream immediately - we just needed to get permission
+        stream.getTracks().forEach(track => track.stop());
+        setHasPermission(true);
+        console.log('🎤 Microphone permission granted and persisted');
+      } catch (err) {
+        console.warn('⚠️ Microphone permission denied:', err);
+        setHasPermission(false);
+      }
+    };
+
+    requestMicPermission();
+  }, []);
 
   useEffect(() => {
     // Check browser support for speech recognition
@@ -210,9 +233,6 @@ export const useSpeech = () => {
     setIsSpeaking(true);
     setError(null);
 
-    // Flag to prevent multiple audio sources from playing
-    let audioPlaying = false;
-
     // Stop any currently playing audio and cancel Web Speech
     if (audioRef.current) {
       audioRef.current.pause();
@@ -261,7 +281,6 @@ export const useSpeech = () => {
         console.log('✅ ElevenLabs TTS response received');
         // Reset key index on success so next request starts from key #1
         currentElevenLabsKeyIndex = 0;
-        audioPlaying = true; // Mark that we're playing audio
         const audioBlob = await elevenLabsResponse.blob();
         console.log('🎵 Audio blob created, size:', audioBlob.size);
         
@@ -289,6 +308,7 @@ export const useSpeech = () => {
         
         console.log('▶️ Starting ElevenLabs audio playback...');
         await audioRef.current.play();
+        console.log('🎵 ElevenLabs audio started successfully - EXITING to prevent fallback');
         return; // Success! Exit early
       } else {
         // Log the error details
@@ -334,7 +354,6 @@ export const useSpeech = () => {
               console.log('✅ ElevenLabs retry successful with API key #' + (currentElevenLabsKeyIndex + 1) + '!');
               // Reset key index on success so next request starts from key #1
               currentElevenLabsKeyIndex = 0;
-              audioPlaying = true; // Mark that we're playing audio
               const audioBlob = await retryElevenLabsResponse.blob();
               console.log('🎵 Audio blob created, size:', audioBlob.size);
               
@@ -362,6 +381,7 @@ export const useSpeech = () => {
               
               console.log('▶️ Starting ElevenLabs audio playback...');
               await audioRef.current.play();
+              console.log('🎵 ElevenLabs retry audio started successfully - EXITING to prevent fallback');
               return; // Success! Exit early
             } else {
               console.warn('❌ ElevenLabs retry error status:', retryElevenLabsResponse.status);
@@ -385,15 +405,11 @@ export const useSpeech = () => {
       console.warn('⚠️ ElevenLabs error:', elevenLabsErr.message);
     }
 
-    // Fallback to PlayAI
-    // Only try PlayAI if ElevenLabs didn't already start playing
-    if (audioPlaying) {
-      console.log('ℹ️ ElevenLabs audio already playing, skipping PlayAI fallback');
-      return;
-    }
+    // Fallback to PlayAI (only reached if ElevenLabs completely failed)
+    console.log('🌐 Falling back to Groq PlayAI TTS...');
     
     try {
-      console.log('🌐 Attempting Groq PlayAI TTS...');
+      console.log('�️ Attempting Groq PlayAI TTS...');
       console.log('🔑 Using TTS API key #' + (currentTTSKeyIndex + 1));
       
       // Call Groq Audio API for TTS
@@ -615,6 +631,7 @@ export const useSpeech = () => {
     transcript,
     error,
     isSupported,
+    hasPermission,
     startListening,
     stopListening,
     speak,

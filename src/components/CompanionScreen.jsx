@@ -680,7 +680,7 @@ export default function CompanionScreen({
   }
 
   return (
-    <div className="fixed inset-0 bg-black">
+    <div className="fixed inset-0 bg-black h-screen-safe">
       {/* Character Video - Fullscreen Background */}
       <div className="absolute inset-0 z-0">
         <motion.div
@@ -699,12 +699,16 @@ export default function CompanionScreen({
         </motion.div>
       </div>
 
-      {/* Open App Button - Top Right (Above all blur) */}
+      {/* Open App Button - Top Right (Above all blur) with safe area padding */}
       <motion.button
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         onClick={onOpenApp}
-        className="absolute top-4 right-4 z-50 px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-purple-500/90 to-pink-500/90 backdrop-blur-md rounded-full text-white text-xs sm:text-sm font-semibold shadow-lg border border-white/20"
+        className="absolute z-50 px-3 py-1.5 sm:px-4 sm:py-2 bg-gradient-to-r from-purple-500/90 to-pink-500/90 backdrop-blur-md rounded-full text-white text-xs sm:text-sm font-semibold shadow-lg border border-white/20"
+        style={{
+          top: 'max(env(safe-area-inset-top, 0px) + 1rem, 1rem)',
+          right: 'max(env(safe-area-inset-right, 0px) + 1rem, 1rem)'
+        }}
       >
         KwikLyze
       </motion.button>
@@ -887,8 +891,12 @@ export default function CompanionScreen({
         </AnimatePresence>
       </div>
 
-      {/* Bottom Controls - Blur Only Style */}
-      <div className="absolute bottom-0 inset-x-0 z-20 pb-safe">
+      {/* Bottom Controls - Blur Only Style with safe area */}
+      <div className="absolute bottom-0 inset-x-0 z-20" style={{
+        paddingBottom: 'max(env(safe-area-inset-bottom, 0px) + 1rem, 1rem)',
+        paddingLeft: 'env(safe-area-inset-left, 0px)',
+        paddingRight: 'env(safe-area-inset-right, 0px)'
+      }}>
         {/* Backdrop blur for glass effect - no dark overlay */}
         <div className="absolute inset-0 backdrop-blur-xl" 
           style={{

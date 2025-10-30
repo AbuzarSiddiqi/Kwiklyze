@@ -10,10 +10,23 @@
   html {
     @apply text-base;
     -webkit-tap-highlight-color: transparent;
+    /* Ensure full height on iOS */
+    height: 100%;
+    overflow: hidden;
   }
   
   body {
     @apply overflow-x-hidden;
+    /* Full height and handle safe areas */
+    height: 100%;
+    overflow: hidden;
+    /* Remove white patches on iOS */
+    background-color: #000;
+  }
+  
+  #root {
+    height: 100%;
+    overflow: hidden;
   }
 }
 
@@ -41,11 +54,30 @@
   
   /* Safe area for notched devices */
   .safe-top {
-    padding-top: env(safe-area-inset-top);
+    padding-top: max(env(safe-area-inset-top), 1rem);
   }
   
   .safe-bottom {
-    padding-bottom: env(safe-area-inset-bottom);
+    padding-bottom: max(env(safe-area-inset-bottom), 1rem);
+  }
+  
+  .safe-left {
+    padding-left: env(safe-area-inset-left);
+  }
+  
+  .safe-right {
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  /* Proper height handling for iOS PWA */
+  .min-h-screen-safe {
+    min-height: 100vh;
+    min-height: -webkit-fill-available;
+  }
+  
+  .h-screen-safe {
+    height: 100vh;
+    height: -webkit-fill-available;
   }
 }
 

@@ -11,7 +11,8 @@ console.log('📦 Groq SDK imported:', typeof Groq);
 // Multiple API keys for automatic failover on rate limits from environment variables
 const API_KEYS = [
   import.meta.env.VITE_GROQ_API_KEY_1,
-  import.meta.env.VITE_GROQ_API_KEY_2
+  import.meta.env.VITE_GROQ_API_KEY_2,
+  import.meta.env.VITE_GROQ_API_KEY_3
 ].filter(Boolean); // Remove undefined values
 
 let currentKeyIndex = 0;
