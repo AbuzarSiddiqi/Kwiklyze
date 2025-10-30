@@ -30,9 +30,7 @@ export default defineConfig({
         ]
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,svg}'],
-        globIgnores: ['**/Image/**', '**/Male Character/**', '**/Female Character/**'],
-        maximumFileSizeToCacheInBytes: 3000000, // 3 MB
+        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/api\.groq\.com\/.*/i,
@@ -42,17 +40,6 @@ export default defineConfig({
               expiration: {
                 maxEntries: 10,
                 maxAgeSeconds: 60 * 60 * 24 // 24 hours
-              }
-            }
-          },
-          {
-            urlPattern: /\.(png|jpg|jpeg|mp4|webm)$/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'media-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 60 * 60 * 24 * 30 // 30 days
               }
             }
           }

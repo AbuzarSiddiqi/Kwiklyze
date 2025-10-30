@@ -33,13 +33,20 @@ const TTS_API_KEYS = [
 
 let currentTTSKeyIndex = 0;
 
-// Initialize Groq client for TTS
-const groq = new Groq({
-  apiKey: TTS_API_KEYS[currentTTSKeyIndex],
-  dangerouslyAllowBrowser: true
-});
+// Initialize Groq client for TTS (lazy initialization to handle empty keys)
+let groq = null;
+const initializeGroq = () => {
+  if (!groq && TTS_API_KEYS.length > 0 && TTS_API_KEYS[currentTTSKeyIndex]) {
+    groq = new Groq({
+      apiKey: TTS_API_KEYS[currentTTSKeyIndex],
+      dangerouslyAllowBrowser: true
+    });
+    console.log('🎤 TTS initialized with API key #' + (currentTTSKeyIndex + 1));
+  }
+  return groq;
+};
 
-console.log('🎤 TTS initialized with ElevenLabs (2 keys) + PlayAI fallback');
+console.log('🎤 TTS ready with ElevenLabs (3 keys) + PlayAI fallback (2 keys)');
 
 /**
  * Hook for Speech - PlayAI TTS from Groq + Web Speech Recognition

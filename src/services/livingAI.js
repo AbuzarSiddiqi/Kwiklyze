@@ -14,19 +14,24 @@ const API_KEYS = [
   import.meta.env.VITE_GROQ_API_KEY_2
 ].filter(Boolean); // Remove undefined values
 
-// Fallback to avoid errors if no keys are set
-if (API_KEYS.length === 0) {
-  console.error('⚠️ No GROQ API keys found! Please set VITE_GROQ_API_KEY_1 and VITE_GROQ_API_KEY_2 in environment variables.');
-  API_KEYS.push('dummy-key'); // Prevent crash
-}
-
 let currentKeyIndex = 0;
 
-// Initialize Groq client with first API key
-let groq = new Groq({
-  apiKey: API_KEYS[currentKeyIndex],
-  dangerouslyAllowBrowser: true, // For client-side usage
-});
+// Initialize Groq client lazily (only when first needed)
+let groq = null;
+
+const initializeGroq = () => {
+  if (!groq && API_KEYS.length > 0 && API_KEYS[currentKeyIndex]) {
+    groq = new Groq({
+      apiKey: API_KEYS[currentKeyIndex],
+      dangerouslyAllowBrowser: true, // For client-side usage
+    });
+    console.log('✅ Groq client initialized with', API_KEYS.length, 'API keys');
+    console.log('🔑 Current API Key:', currentKeyIndex + 1);
+  } else if (API_KEYS.length === 0) {
+    console.error('⚠️ No GROQ API keys found! Please set VITE_GROQ_API_KEY_1 and VITE_GROQ_API_KEY_2 in environment variables.');
+  }
+  return groq;
+};
 
 // Function to switch to next API key
 const switchToNextApiKey = () => {
@@ -38,9 +43,6 @@ const switchToNextApiKey = () => {
   });
   return groq;
 };
-
-console.log('✅ Groq client initialized with', API_KEYS.length, 'API keys');
-console.log('🔑 Current API Key:', currentKeyIndex + 1);
 
 export const livingAI = {
   // AI's internal state (personality and memory)
@@ -126,6 +128,12 @@ You're not a formal assistant - you're their companion. Talk like a friend would
   async generateResponse(userMessage, context = {}) {
     console.log('🔵 generateResponse called with:', userMessage);
     
+    // Initialize Groq client if not already done
+    const client = initializeGroq();
+    if (!client) {
+      throw new Error('Groq client not initialized. Please check API keys.');
+    }
+    
     try {
       // Add user message to history
       this.state.conversationHistory.push({
@@ -147,7 +155,7 @@ You're not a formal assistant - you're their companion. Talk like a friend would
         messageCount: this.state.conversationHistory.length
       });
 
-      const completion = await groq.chat.completions.create({
+      const completion = await client.chat.completions.create({
         messages: [
           {
             role: 'system',
@@ -201,12 +209,12 @@ You're not a formal assistant - you're their companion. Talk like a friend would
       
       if (isRateLimit) {
         console.log('⚠️ Rate limit detected! Switching API key...');
-        switchToNextApiKey();
+        const newClient = switchToNextApiKey();
         
         // Retry with new API key
         try {
           console.log('🔄 Retrying with new API key...');
-          const completion = await groq.chat.completions.create({
+          const completion = await newClient.chat.completions.create({
             messages: [
               {
                 role: 'system',
@@ -357,6 +365,12 @@ You're not a formal assistant - you're their companion. Talk like a friend would
     console.log('🎲 generateSpontaneousThought called');
     console.log('📋 Context:', context);
     
+    // Initialize Groq client if not already done
+    const client = initializeGroq();
+    if (!client) {
+      throw new Error('Groq client not initialized. Please check API keys.');
+    }
+    
     const thoughtPrompts = [
       "Notice something interesting about the user's day and comment on it playfully",
       "Ask a thoughtful question about how they're feeling",
@@ -376,7 +390,7 @@ You're not a formal assistant - you're their companion. Talk like a friend would
     try {
       console.log('🌐 Calling Groq API for spontaneous thought...');
       
-      const completion = await groq.chat.completions.create({
+      const completion = await client.chat.completions.create({
         messages: [
           {
             role: 'system',
@@ -426,12 +440,12 @@ You're not a formal assistant - you're their companion. Talk like a friend would
       
       if (isRateLimit) {
         console.log('⚠️ Rate limit detected in spontaneous thought! Switching API key...');
-        switchToNextApiKey();
+        const newClient = switchToNextApiKey();
         
         // Retry with new API key
         try {
           console.log('🔄 Retrying spontaneous thought with new API key...');
-          const completion = await groq.chat.completions.create({
+          const completion = await newClient.chat.completions.create({
             messages: [
               {
                 role: 'system',
@@ -497,8 +511,14 @@ You're not a formal assistant - you're their companion. Talk like a friend would
   async analyzeDailyPatterns(activities, tasks) {
     const summary = this.buildDailySummary(activities, tasks);
     
+    // Initialize Groq client if not already done
+    const client = initializeGroq();
+    if (!client) {
+      throw new Error('Groq client not initialized. Please check API keys.');
+    }
+    
     try {
-      const completion = await groq.chat.completions.create({
+      const completion = await client.chat.completions.create({
         messages: [
           {
             role: 'system',
@@ -525,11 +545,11 @@ You're not a formal assistant - you're their companion. Talk like a friend would
       
       if (isRateLimit) {
         console.log('⚠️ Rate limit in analysis! Switching API key...');
-        switchToNextApiKey();
+        const newClient = switchToNextApiKey();
         
         try {
           console.log('🔄 Retrying analysis with new API key...');
-          const completion = await groq.chat.completions.create({
+          const completion = await newClient.chat.completions.create({
             messages: [
               {
                 role: 'system',
@@ -582,8 +602,14 @@ Tasks: ${completed}/${total} completed
   async generateReflection(activities, tasks, mood, energy) {
     const summary = this.buildDailySummary(activities, tasks);
     
+    // Initialize Groq client if not already done
+    const client = initializeGroq();
+    if (!client) {
+      throw new Error('Groq client not initialized. Please check API keys.');
+    }
+    
     try {
-      const completion = await groq.chat.completions.create({
+      const completion = await client.chat.completions.create({
         messages: [
           {
             role: 'system',
@@ -610,11 +636,11 @@ Tasks: ${completed}/${total} completed
       
       if (isRateLimit) {
         console.log('⚠️ Rate limit in reflection! Switching API key...');
-        switchToNextApiKey();
+        const newClient = switchToNextApiKey();
         
         try {
           console.log('🔄 Retrying reflection with new API key...');
-          const completion = await groq.chat.completions.create({
+          const completion = await newClient.chat.completions.create({
             messages: [
               {
                 role: 'system',
